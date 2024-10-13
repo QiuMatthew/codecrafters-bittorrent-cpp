@@ -40,8 +40,7 @@ json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 		// std::cout << "index = " << index << std::endl;
 		if (encoded_value[index] == 'e') {
 			// list ends
-			index++;
-			return json(decoded_value);
+			break;
 		}
 		if (std::isdigit(encoded_value[index])) {
 			decoded_value.push_back(
@@ -54,23 +53,35 @@ json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 		}
 	}
 
+	index++;
 	return json(decoded_value);
 }
 
 json decode_bencoded_dict(const std::string& encoded_value, size_t& index) {
 	nlohmann::ordered_map<json, json> map;
 
-	index++;  // skip first 'd'
-	std::string key = decode_bencoded_string(encoded_value, index);
-	// if (std::isdigit(encoded_value[index])) {
-	// } else if (encoded_value[0] == 'i') {
-	// 	return decode_bencoded_integer(encoded_value, index);
-	// } else if (encoded_value[0] == 'l') {
-	// 	return decode_bencoded_list(encoded_value, index);
-	// } else if (encoded_value[0] == 'd') {
-	// 	return decode_bencoded_dict(encoded_value, index);
-	// }
+	index++;  // skip leading 'd'
+	while (index < encoded_value.size() - 1) {
+		if (encoded_value[index] == 'e') {
+			// list ends
+			break;
+		}
+		json key = decode_bencoded_string(encoded_value, index);
+		json val;
+		if (std::isdigit(encoded_value[index])) {
+			val = decode_bencoded_string(encoded_value, index);
+		} else if (encoded_value[index] == 'i') {
+			val = decode_bencoded_integer(encoded_value, index);
+		} else if (encoded_value[index] == 'l') {
+			val = decode_bencoded_list(encoded_value, index);
+		} else if (encoded_value[index] == 'd') {
+			val = decode_bencoded_dict(encoded_value, index);
+		}
 
+		map.push_back({key, val});
+	}
+
+	index++;  // skip ending 'e'
 	return json(map);
 }
 
