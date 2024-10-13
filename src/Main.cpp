@@ -25,11 +25,16 @@ json decode_bencoded_integer(const std::string& encoded_value) {
 	return json(stoll(encoded_value.substr(1, encoded_value.size() - 2)));
 }
 
-json decode_bencoded_list(const std::string& encoded_value) {
+json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 	std::vector<json> decoded_value;
-	size_t index = 1;
 
+	index++;
 	while (index < encoded_value.size() - 1) {
+		if (encoded_value[index] == 'e') {
+			// end
+			index++;
+			return json(decoded_value);
+		}
 		if (std::isdigit(encoded_value[index])) {
 			// string
 			size_t colon_index = encoded_value.find(':', index);
@@ -45,6 +50,9 @@ json decode_bencoded_list(const std::string& encoded_value) {
 			decoded_value.push_back(json(
 				stoll(encoded_value.substr(index + 1, end_index - index + 1))));
 			index = end_index + 1;
+		} else if (encoded_value[index] == 'l') {
+			// list
+			decoded_value.push_back(decode_bencoded_list(encoded_value, index));
 		}
 	}
 
@@ -57,7 +65,8 @@ json decode_bencoded_value(const std::string& encoded_value) {
 	} else if (encoded_value[0] == 'i') {
 		return decode_bencoded_integer(encoded_value);
 	} else if (encoded_value[0] == 'l') {
-		return decode_bencoded_list(encoded_value);
+		size_t index = 0;
+		return decode_bencoded_list(encoded_value, index);
 	} else {
 		throw std::runtime_error("Unhandled encoded value: " + encoded_value);
 	}
