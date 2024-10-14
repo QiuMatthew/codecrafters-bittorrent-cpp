@@ -1,6 +1,7 @@
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -53,7 +54,7 @@ json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 		}
 	}
 
-	index++;
+	index++;  // skip ending e
 	return json(decoded_value);
 }
 
@@ -99,6 +100,18 @@ json decode_bencoded_value(const std::string& encoded_value) {
 		throw std::runtime_error("Unhandled encoded value: " + encoded_value);
 	}
 }
+json parse_torrent_file(const std::string& filename) {
+	std::ifstream fs(filename);
+	if (!fs.is_open()) {
+		throw std::runtime_error("Torrent file not opened: " + filename);
+	}
+
+	std::string encoded_torrent_info;
+	std::getline(fs, encoded_torrent_info);
+	json decoded_torrent_info = decode_bencoded_value(encoded_torrent_info);
+
+	return decoded_torrent_info;
+}
 
 int main(int argc, char* argv[]) {
 	// Flush after every std::cout / std::cerr
@@ -127,6 +140,14 @@ int main(int argc, char* argv[]) {
 		std::string encoded_value = argv[2];
 		json decoded_value = decode_bencoded_value(encoded_value);
 		std::cout << decoded_value.dump() << std::endl;
+	} else if (command == "info") {
+		std::string filename = argv[2];
+		json decoded_info = parse_torrent_file(filename);
+		// std::cout << "decoded_info = " << decoded_info << std::endl;
+		std::string tracker_url = decoded_info["announce"];
+		std::int64_t length = decoded_info["info"]["length"];
+		std::cout << "Tracker URL: " + tracker_url + "\n";
+		std::cout << "Length: " + std::to_string(length) + "\n";
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
