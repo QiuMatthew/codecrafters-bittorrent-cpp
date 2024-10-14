@@ -100,6 +100,7 @@ json decode_bencoded_value(const std::string& encoded_value) {
 		throw std::runtime_error("Unhandled encoded value: " + encoded_value);
 	}
 }
+
 json parse_torrent_file(const std::string& filename) {
 	std::ifstream fs(filename);
 	if (!fs.is_open()) {
@@ -143,7 +144,7 @@ int main(int argc, char* argv[]) {
 	} else if (command == "info") {
 		std::string filename = argv[2];
 		json decoded_info = parse_torrent_file(filename);
-		// std::cout << "decoded_info = " << decoded_info << std::endl;
+		std::cout << "decoded_info = " << decoded_info << std::endl;
 		std::string tracker_url = decoded_info["announce"];
 		std::int64_t length = decoded_info["info"]["length"];
 		std::cout << "Tracker URL: " + tracker_url + "\n";
