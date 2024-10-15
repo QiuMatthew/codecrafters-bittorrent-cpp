@@ -3,9 +3,11 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "lib/nlohmann/json.hpp"
+#include "lib/sha1.hpp"
 
 using json = nlohmann::json;
 
@@ -107,11 +109,39 @@ json parse_torrent_file(const std::string& filename) {
 		throw std::runtime_error("Torrent file not opened: " + filename);
 	}
 
-	std::string encoded_torrent_info;
-	std::getline(fs, encoded_torrent_info);
-	json decoded_torrent_info = decode_bencoded_value(encoded_torrent_info);
+	std::string encoded_torrent_meta;
+	std::getline(fs, encoded_torrent_meta);
+	std::cout << "encoded_torrent_meta: \n"
+			  << encoded_torrent_meta << std::endl;
+	json decoded_torrent_meta = decode_bencoded_value(encoded_torrent_meta);
 
-	return decoded_torrent_info;
+	return decoded_torrent_meta;
+}
+
+std::string json_to_bencode(const json& j) {
+	std::ostringstream oss;
+	if (j.is_object()) {
+		oss << 'd';
+		for (auto element : j.items()) {
+			oss << element.key().size() << ':' << element.key()
+				<< json_to_bencode(element.value());
+			// std::cout << "key = " << element.key() << std::endl;
+		}
+		oss << 'e';
+	} else if (j.is_array()) {
+		oss << 'l';
+		for (auto element : j) {
+			oss << json_to_bencode(element);
+		}
+		oss << 'e';
+	} else if (j.is_number_integer()) {
+		oss << 'i' << j << 'e';
+	} else if (j.is_string()) {
+		const std::string value = j.get<std::string>();
+		oss << value.size() << ':' << value;
+	}
+
+	return oss.str();
 }
 
 int main(int argc, char* argv[]) {
@@ -143,12 +173,18 @@ int main(int argc, char* argv[]) {
 		std::cout << decoded_value.dump() << std::endl;
 	} else if (command == "info") {
 		std::string filename = argv[2];
-		json decoded_info = parse_torrent_file(filename);
-		std::cout << "decoded_info = " << decoded_info << std::endl;
-		std::string tracker_url = decoded_info["announce"];
-		std::int64_t length = decoded_info["info"]["length"];
+		json decoded_meta = parse_torrent_file(filename);
+		// std::cout << "decoded_info = " << decoded_info << std::endl;
+		std::string tracker_url = decoded_meta["announce"];
+		std::int64_t length = decoded_meta["info"]["length"];
 		std::cout << "Tracker URL: " + tracker_url + "\n";
 		std::cout << "Length: " + std::to_string(length) + "\n";
+		json info = decoded_meta["info"];
+		std::string encoded_info = json_to_bencode(info);
+		SHA1 sha1;
+		sha1.update(encoded_info);
+		std::string info_hash = sha1.final();
+		std::cout << "Info Hash: " << info_hash << std::endl;
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
