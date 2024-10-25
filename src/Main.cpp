@@ -111,8 +111,8 @@ json parse_torrent_file(const std::string& filename) {
 
 	std::string encoded_torrent_meta;
 	std::getline(fs, encoded_torrent_meta);
-	std::cout << "encoded_torrent_meta: \n"
-			  << encoded_torrent_meta << std::endl;
+	// std::cout << "encoded_torrent_meta: \n"
+	// 		  << encoded_torrent_meta << std::endl;
 	json decoded_torrent_meta = decode_bencoded_value(encoded_torrent_meta);
 
 	return decoded_torrent_meta;
