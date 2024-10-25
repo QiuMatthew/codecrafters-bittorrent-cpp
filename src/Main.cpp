@@ -170,15 +170,15 @@ int main(int argc, char* argv[]) {
 		// Uncomment this block to pass the first stage
 		std::string encoded_value = argv[2];
 		json decoded_value = decode_bencoded_value(encoded_value);
-		std::cout << decoded_value.dump() << std::endl;
+		// std::cout << decoded_value.dump() << std::endl;
 	} else if (command == "info") {
 		std::string filename = argv[2];
 		json decoded_meta = parse_torrent_file(filename);
 		// std::cout << "decoded_info = " << decoded_info << std::endl;
 		std::string tracker_url = decoded_meta["announce"];
 		std::int64_t length = decoded_meta["info"]["length"];
-		std::cout << "Tracker URL: " + tracker_url + "\n";
-		std::cout << "Length: " + std::to_string(length) + "\n";
+		// std::cout << "Tracker URL: " + tracker_url + "\n";
+		// std::cout << "Length: " + std::to_string(length) + "\n";
 		json info = decoded_meta["info"];
 		std::string encoded_info = json_to_bencode(info);
 		SHA1 sha1;
