@@ -125,7 +125,7 @@ std::string json_to_bencode(const json& j) {
 		for (auto element : j.items()) {
 			oss << element.key().size() << ':' << element.key()
 				<< json_to_bencode(element.value());
-			// std::cout << "key = " << element.key() << std::endl;
+			std::cout << "key = " << element.key() << std::endl;
 		}
 		oss << 'e';
 	} else if (j.is_array()) {
