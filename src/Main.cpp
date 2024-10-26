@@ -135,7 +135,7 @@ std::string json_to_bencode(const json& j) {
 		}
 		oss << 'e';
 	} else if (j.is_number_integer()) {
-		oss << 'i' << j << 'e';
+		oss << 'i' << j.get<int>() << 'e';
 	} else if (j.is_string()) {
 		const std::string value = j.get<std::string>();
 		oss << value.size() << ':' << value;
