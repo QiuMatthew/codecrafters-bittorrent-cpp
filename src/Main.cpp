@@ -190,10 +190,10 @@ int main(int argc, char* argv[]) {
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		json info = decoded_meta["info"];
 		// print info json
-		std::cout << "Info JSON: " << std::endl;
-		for (auto element : info.items()) {
-			std::cout << element.key() << " : " << element.value() << std::endl;
-		}
+		// std::cout << "Info JSON: " << std::endl;
+		// for (auto element : info.items()) {
+		// 	std::cout << element.key() << " : " << element.value() << std::endl;
+		// }
 		std::string encoded_info = json_to_bencode(info);
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
 		SHA1 sha1;
