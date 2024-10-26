@@ -122,9 +122,18 @@ std::string json_to_bencode(const json& j) {
 	std::ostringstream oss;
 	if (j.is_object()) {
 		oss << 'd';
-		for (auto element : j.items()) {
-			oss << element.key().size() << ':' << element.key()
-				<< json_to_bencode(element.value());
+		// sort items by key lexicographically
+		std::vector<std::pair<std::string, json>> sorted_items(j.begin(),
+															   j.end());
+		std::sort(sorted_items.begin(), sorted_items.end(),
+				  [](const std::pair<std::string, json>& a,
+					 const std::pair<std::string, json>& b) {
+					  return a.first < b.first;
+				  });
+
+		for (auto element : sorted_items) {
+			oss << element.first.size() << ':' << element.first
+				<< json_to_bencode(element.second);
 			// std::cout << "key = " << element.key() << std::endl;
 		}
 		oss << 'e';
