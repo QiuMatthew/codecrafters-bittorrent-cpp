@@ -125,7 +125,7 @@ std::string json_to_bencode(const json& j) {
 		for (auto element : j.items()) {
 			oss << element.key().size() << ':' << element.key()
 				<< json_to_bencode(element.value());
-			std::cout << "key = " << element.key() << std::endl;
+			// std::cout << "key = " << element.key() << std::endl;
 		}
 		oss << 'e';
 	} else if (j.is_array()) {
@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		json info = decoded_meta["info"];
 		std::string encoded_info = json_to_bencode(info);
+		std::cout << "Encoded Info: " << encoded_info << std::endl;
 		SHA1 sha1;
 		sha1.update(encoded_info);
 		std::string info_hash = sha1.final();
