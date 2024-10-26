@@ -180,6 +180,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Tracker URL: " + tracker_url + "\n";
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		json info = decoded_meta["info"];
+		std::cout << "Info: " << info.dump() << std::endl;
 		std::string encoded_info = json_to_bencode(info);
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
 		SHA1 sha1;
