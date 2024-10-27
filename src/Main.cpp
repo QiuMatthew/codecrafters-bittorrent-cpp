@@ -119,38 +119,27 @@ json parse_torrent_file(const std::string& filename) {
 }
 
 std::string json_to_bencode(const json& j) {
-	std::ostringstream oss;
+	std::ostringstream os;
 	if (j.is_object()) {
-		oss << 'd';
-		// sort items by key lexicographically
-		std::vector<std::pair<std::string, json>> sorted_items(j.begin(),
-															   j.end());
-		std::sort(sorted_items.begin(), sorted_items.end(),
-				  [](const std::pair<std::string, json>& a,
-					 const std::pair<std::string, json>& b) {
-					  return a.first < b.first;
-				  });
-
-		for (auto element : sorted_items) {
-			oss << element.first.size() << ':' << element.first
-				<< json_to_bencode(element.second);
-			// std::cout << "key = " << element.key() << std::endl;
+		os << 'd';
+		for (auto& el : j.items()) {
+			os << el.key().size() << ':' << el.key()
+			   << json_to_bencode(el.value());
 		}
-		oss << 'e';
+		os << 'e';
 	} else if (j.is_array()) {
-		oss << 'l';
-		for (auto element : j) {
-			oss << json_to_bencode(element);
+		os << 'l';
+		for (const json& item : j) {
+			os << json_to_bencode(item);
 		}
-		oss << 'e';
+		os << 'e';
 	} else if (j.is_number_integer()) {
-		oss << 'i' << j.get<int>() << 'e';
+		os << 'i' << j.get<int>() << 'e';
 	} else if (j.is_string()) {
-		const std::string value = j.get<std::string>();
-		oss << value.size() << ':' << value;
+		const std::string& value = j.get<std::string>();
+		os << value.size() << ':' << value;
 	}
-
-	return oss.str();
+	return os.str();
 }
 
 int main(int argc, char* argv[]) {
