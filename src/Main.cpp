@@ -490,10 +490,18 @@ int main(int argc, char* argv[]) {
 			std::int32_t block_offset = i * block_size;
 			std::int32_t block_length = std::min(remaining_length, block_size);
 			std::vector<char> request_message = {0, 0, 0, 13, 6};
-			request_message.push_back((piece_offset + block_offset) >> 24);
-			request_message.push_back((piece_offset + block_offset) >> 16);
-			request_message.push_back((piece_offset + block_offset) >> 8);
-			request_message.push_back((piece_offset + block_offset));
+			request_message.push_back(piece_index >> 24);
+			request_message.push_back(piece_index >> 16);
+			request_message.push_back(piece_index >> 8);
+			request_message.push_back(piece_index);
+			request_message.push_back(block_offset >> 24);
+			request_message.push_back(block_offset >> 16);
+			request_message.push_back(block_offset >> 8);
+			request_message.push_back(block_offset);
+			request_message.push_back(block_length >> 24);
+			request_message.push_back(block_length >> 16);
+			request_message.push_back(block_length >> 8);
+			request_message.push_back(block_length);
 			if (send(sockfd, request_message.data(), request_message.size(),
 					 0) < 0) {
 				std::cerr << "Failed to send request message" << std::endl;
