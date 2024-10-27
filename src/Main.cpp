@@ -237,12 +237,12 @@ int main(int argc, char* argv[]) {
 		json info = decoded_meta["info"];
 		std::string encoded_info = json_to_bencode(info);
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
-		std::string info_hash = sha1_hash(encoded_info);
-		std::cout << "Info Hash: " << info_hash << std::endl;
-		std::string info_hash_bytes = hex_string_to_bytes(info_hash);
+		std::string info_hash_hex = sha1_hash(encoded_info);
+		std::cout << "Info Hash: " << info_hash_hex << std::endl;
+		std::string info_hash_bytes = hex_string_to_bytes(info_hash_hex);
 		std::cout << "Info Hash Bytes: " << info_hash_bytes << std::endl;
 		// get peer id
-		std::string peer_id = "-PC0001-123456789012";
+		std::string peer_id = "12345678901234567890";
 		std::cout << "Peer ID: " << peer_id << std::endl;
 		// get port
 		std::int64_t port = 6881;
