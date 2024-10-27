@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <sys/_types/_u_int.h>
 #include <sys/socket.h>
 
 #include <cctype>
@@ -437,6 +438,88 @@ int main(int argc, char* argv[]) {
 		std::string output_file = argv[3];
 		std::string filename = argv[4];
 		std::int64_t piece_index = std::stoll(argv[5]);
+		json decoded_meta = parse_torrent_file(filename);
+		std::vector<std::string> peer_list = get_peer_list(decoded_meta);
+		std::string peer_ip_port = peer_list[0];
+		std::string peer_ip;
+		std::int64_t peer_port;
+		size_t colon_index = peer_ip_port.find(':');
+		if (colon_index != std::string::npos) {
+			peer_ip = peer_ip_port.substr(0, colon_index);
+			peer_port = std::stoll(peer_ip_port.substr(colon_index + 1));
+		} else {
+			std::cerr << "Invalid peer IP:Port: " << peer_ip_port << std::endl;
+			return 1;
+		}
+		int sockfd = 0;
+		std::string peer_id_hex =
+			handshake(filename, peer_ip, peer_port, sockfd);
+		std::cout << "Handshake successful" << std::endl;
+		std::cout << "Peer ID: " << peer_id_hex << std::endl;
+		// wait for bitfield message
+		std::vector<char> bitfield_message(5);
+		if (recv(sockfd, bitfield_message.data(), bitfield_message.size(), 0) <
+			0) {
+			std::cerr << "Failed to receive bitfield message" << std::endl;
+			return 1;
+		}
+		// send interested message
+		const u_int INTERESTED = 2;
+		std::vector<char> interested_message = {0, 0, 0, 1, INTERESTED};
+		if (send(sockfd, interested_message.data(), interested_message.size(),
+				 0) < 0) {
+			std::cerr << "Failed to send interested message" << std::endl;
+			return 1;
+		}
+		// wait for unchoke message
+		std::vector<char> unchoke_message(5);
+		if (recv(sockfd, unchoke_message.data(), unchoke_message.size(), 0) <
+			0) {
+			std::cerr << "Failed to receive unchoke message" << std::endl;
+			return 1;
+		}
+		// send request message
+		std::int64_t piece_length = decoded_meta["info"]["piece length"];
+		std::int64_t piece_offset = piece_index * piece_length;
+		std::int64_t block_size = 16384;  // 2^14 bytes = 16 KB
+		std::int64_t num_blocks = piece_length / block_size;
+		if (piece_length % block_size != 0) {
+			num_blocks++;
+		}
+		std::int64_t remaining_length = piece_length;
+		for (std::int64_t i = 0; i < num_blocks; i++) {
+			std::int64_t block_offset = i * block_size;
+			std::int64_t block_length = std::min(remaining_length, block_size);
+			std::vector<char> request_message = {0, 0, 0, 13, 6};
+			request_message.push_back(piece_index);
+			request_message.push_back(block_offset);
+			request_message.push_back(block_length);
+			if (send(sockfd, request_message.data(), request_message.size(),
+					 0) < 0) {
+				std::cerr << "Failed to send request message" << std::endl;
+				return 1;
+			}
+			// receive piece message
+			std::vector<char> piece_message(13 + block_length);
+			if (recv(sockfd, piece_message.data(), piece_message.size(), 0) <
+				0) {
+				std::cerr << "Failed to receive piece message" << std::endl;
+				return 1;
+			}
+			// open output file with append mode
+			std::ofstream output(output_file, std::ios::binary | std::ios::app);
+			// write block to output file
+			if (output) {
+				output.write(piece_message.data() + 13, block_length);
+				output.close();
+			} else {
+				std::cerr << "Failed to open output file: " << output_file
+						  << std::endl;
+				return 1;
+			}
+			remaining_length -= block_length;
+		}
+		std::cout << "Downloaded piece " << piece_index << std::endl;
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
