@@ -119,16 +119,6 @@ std::string read_file(const std::string& file_path) {
 }
 
 json parse_torrent_file(const std::string& filename) {
-	// std::ifstream fs(filename);
-	// if (!fs.is_open()) {
-	// 	throw std::runtime_error("Torrent file not opened: " + filename);
-	// }
-	//
-	// std::string encoded_torrent_meta;
-	// std::getline(fs, encoded_torrent_meta);
-	// std::cout << "encoded_torrent_meta: \n"
-	// 		  << encoded_torrent_meta << std::endl;
-
 	std::string encoded_torrent_meta = read_file(filename);
 	json decoded_torrent_meta = decode_bencoded_value(encoded_torrent_meta);
 
@@ -195,12 +185,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "Tracker URL: " + tracker_url + "\n";
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		json info = decoded_meta["info"];
-		// print info json
-		// std::cout << info.dump(4) << std::endl;
-		// std::cout << "Info JSON: " << std::endl;
-		// for (auto element : info.items()) {
-		// 	std::cout << element.key() << " : " << element.value() << std::endl;
-		// }
 		std::string encoded_info = json_to_bencode(info);
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
 		SHA1 sha1;
