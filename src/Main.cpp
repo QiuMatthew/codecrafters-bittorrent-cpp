@@ -185,6 +185,75 @@ std::string url_encode(const std::string& input) {
 	return encoded.str();
 }
 
+std::string get_tracker_url(const json& decoded_meta) {
+	return decoded_meta["announce"];
+}
+
+std::int64_t get_length(const json& decoded_meta) {
+	return decoded_meta["info"]["length"];
+}
+
+std::string get_info_hash(const json& decoded_meta) {
+	json info = decoded_meta["info"];
+	std::string encoded_info = json_to_bencode(info);
+	return sha1_hash(encoded_info);
+}
+
+std::vector<std::string> get_peer_list(const json& decoded_meta) {
+	// get tracker URL
+	std::string tracker_url = get_tracker_url(decoded_meta);
+	std::cout << "Tracker URL: " + tracker_url + "\n";
+	// get info, bencode it and hash it
+	json info = decoded_meta["info"];
+	std::string info_hash_hex = get_info_hash(decoded_meta);
+	std::cout << "Info Hash Hex: " << info_hash_hex << std::endl;
+	std::string info_hash_bytes = hex_string_to_bytes(info_hash_hex);
+	std::cout << "Info Hash Bytes: " << info_hash_bytes << std::endl;
+	std::string info_hash = url_encode(info_hash_bytes);
+	std::cout << "Info Hash URL Encoded: " << info_hash << std::endl;
+	// get peer id
+	std::string peer_id = "12345678901234567890";
+	std::cout << "Peer ID: " << peer_id << std::endl;
+	// get port
+	std::int64_t port = 6881;
+	std::cout << "Port: " << port << std::endl;
+	// get length
+	std::int64_t length = get_length(decoded_meta);
+	std::cout << "Length: " + std::to_string(length) + "\n";
+	// send request to tracker
+	std::string request_url =
+		tracker_url + "?info_hash=" + info_hash + "&peer_id=" + peer_id +
+		"&port=" + std::to_string(port) +
+		"&uploaded=0&downloaded=0&left=" + std::to_string(length) +
+		"&compact=1";
+	std::cout << "Request URL: " << request_url << std::endl;
+	http::Request request(request_url);
+	http::Response response = request.send("GET");
+	std::string response_body{response.body.begin(), response.body.end()};
+	std::cout << "Response: " << response_body << std::endl;
+	json decoded_response = decode_bencoded_value(response_body);
+	// if request failed, return 1
+	if (decoded_response.find("failure reason") != decoded_response.end()) {
+		std::cerr << "Failed to get peers: "
+				  << decoded_response["failure reason"] << std::endl;
+		return {};
+	}
+	// get peer list
+	std::string peers = decoded_response["peers"];
+	std::cout << "Peers: " << peers << std::endl;
+	std::vector<std::string> peer_list;
+	for (size_t i = 0; i < peers.size(); i += 6) {
+		std::string ip = std::to_string((unsigned char)peers[i]) + "." +
+						 std::to_string((unsigned char)peers[i + 1]) + "." +
+						 std::to_string((unsigned char)peers[i + 2]) + "." +
+						 std::to_string((unsigned char)peers[i + 3]);
+		std::int64_t port =
+			(unsigned char)peers[i + 4] << 8 | (unsigned char)peers[i + 5];
+		peer_list.push_back(ip + ":" + std::to_string(port));
+	}
+	return peer_list;
+}
+
 int main(int argc, char* argv[]) {
 	// Flush after every std::cout / std::cerr
 	std::cout << std::unitbuf;
@@ -216,16 +285,13 @@ int main(int argc, char* argv[]) {
 		std::string filename = argv[2];
 		json decoded_meta = parse_torrent_file(filename);
 		// get tracker URL
-		std::string tracker_url = decoded_meta["announce"];
+		std::string tracker_url = get_tracker_url(decoded_meta);
 		std::cout << "Tracker URL: " + tracker_url + "\n";
 		// get length
-		std::int64_t length = decoded_meta["info"]["length"];
+		std::int64_t length = get_length(decoded_meta);
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		// get info, bencode it and hash it
-		json info = decoded_meta["info"];
-		std::string encoded_info = json_to_bencode(info);
-		std::cout << "Encoded Info: " << encoded_info << std::endl;
-		std::string info_hash = sha1_hash(encoded_info);
+		std::string info_hash = get_info_hash(decoded_meta);
 		std::cout << "Info Hash: " << info_hash << std::endl;
 		// get piece length
 		std::int64_t piece_length = decoded_meta["info"]["piece length"];
@@ -254,58 +320,10 @@ int main(int argc, char* argv[]) {
 		}
 		std::string filename = argv[2];
 		json decoded_meta = parse_torrent_file(filename);
-		// get tracker URL
-		std::string tracker_url = decoded_meta["announce"];
-		std::cout << "Tracker URL: " + tracker_url + "\n";
-		// get info, bencode it and hash it
-		json info = decoded_meta["info"];
-		std::string encoded_info = json_to_bencode(info);
-		std::cout << "Encoded Info: " << encoded_info << std::endl;
-		std::string info_hash_hex = sha1_hash(encoded_info);
-		std::cout << "Info Hash: " << info_hash_hex << std::endl;
-		std::string info_hash_bytes = hex_string_to_bytes(info_hash_hex);
-		std::cout << "Info Hash Bytes: " << info_hash_bytes << std::endl;
-		std::string info_hash = url_encode(info_hash_bytes);
-		std::cout << "Info Hash URL Encoded: " << info_hash << std::endl;
-		// get peer id
-		std::string peer_id = "12345678901234567890";
-		std::cout << "Peer ID: " << peer_id << std::endl;
-		// get port
-		std::int64_t port = 6881;
-		std::cout << "Port: " << port << std::endl;
-		// get length
-		std::int64_t length = decoded_meta["info"]["length"];
-		std::cout << "Length: " + std::to_string(length) + "\n";
-		// send request to tracker
-		std::string request_url =
-			tracker_url + "?info_hash=" + info_hash + "&peer_id=" + peer_id +
-			"&port=" + std::to_string(port) +
-			"&uploaded=0&downloaded=0&left=" + std::to_string(length) +
-			"&compact=1";
-		std::cout << "Request URL: " << request_url << std::endl;
-		http::Request request(request_url);
-		http::Response response = request.send("GET");
-		std::string response_body{response.body.begin(), response.body.end()};
-		std::cout << "Response: " << response_body << std::endl;
-		json decoded_response = decode_bencoded_value(response_body);
-		// if request failed, return 1
-		if (decoded_response.find("failure reason") != decoded_response.end()) {
-			std::cerr << "Failed to get peers: "
-					  << decoded_response["failure reason"] << std::endl;
-			return 1;
-		}
-		// get peers
-		std::string peers = decoded_response["peers"];
-		std::cout << "Peers: " << peers << std::endl;
+		std::vector<std::string> peer_list = get_peer_list(decoded_meta);
 		std::cout << "Peers: " << std::endl;
-		for (size_t i = 0; i < peers.size(); i += 6) {
-			std::string ip = std::to_string((unsigned char)peers[i]) + "." +
-							 std::to_string((unsigned char)peers[i + 1]) + "." +
-							 std::to_string((unsigned char)peers[i + 2]) + "." +
-							 std::to_string((unsigned char)peers[i + 3]);
-			std::int64_t port =
-				(unsigned char)peers[i + 4] << 8 | (unsigned char)peers[i + 5];
-			std::cout << ip << ":" << port << std::endl;
+		for (const std::string& peer : peer_list) {
+			std::cout << peer << std::endl;
 		}
 	} else if (command == "handshake") {
 		if (argc < 4) {
@@ -404,6 +422,16 @@ int main(int argc, char* argv[]) {
 		std::string peer_id_hex = byte_string_to_hex(peer_id_response);
 		std::cout << "Handshake successful" << std::endl;
 		std::cout << "Peer ID: " << peer_id_hex << std::endl;
+	} else if (command == "download_piece") {
+		if (argc < 6) {
+			std::cerr << "Usage: " << argv[0]
+					  << " download_piece -o <output_file> <torrent_file> 0"
+					  << std::endl;
+			return 1;
+		}
+		std::string output_file = argv[3];
+		std::string filename = argv[4];
+		std::int64_t piece_index = std::stoll(argv[5]);
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
