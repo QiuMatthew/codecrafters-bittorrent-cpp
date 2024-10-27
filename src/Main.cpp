@@ -30,7 +30,6 @@ json decode_bencoded_integer(const std::string& encoded_value, size_t& index) {
 	size_t end_index = encoded_value.find('e', index + 1);
 	json decoded_value =
 		json(stoll(encoded_value.substr(index + 1, end_index - index - 1)));
-	// std::cout << "test" << std::endl;
 	index = end_index + 1;
 	return decoded_value;
 }
@@ -40,7 +39,6 @@ json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 
 	index++;  // skip first 'l'
 	while (index < encoded_value.size() - 1) {
-		// std::cout << "index = " << index << std::endl;
 		if (encoded_value[index] == 'e') {
 			// list ends
 			break;
@@ -61,7 +59,6 @@ json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 }
 
 json decode_bencoded_dict(const std::string& encoded_value, size_t& index) {
-	// nlohmann::ordered_map<std::string, json> map;
 	json dict = json::object();
 
 	index++;  // skip leading 'd'
@@ -82,12 +79,10 @@ json decode_bencoded_dict(const std::string& encoded_value, size_t& index) {
 			val = decode_bencoded_dict(encoded_value, index);
 		}
 
-		// map.push_back({key, val});
 		dict[key.get<std::string>()] = val;
 	}
 
 	index++;  // skip ending 'e'
-			  // return json(map);
 	return dict;
 }
 
@@ -149,6 +144,12 @@ std::string json_to_bencode(const json& j) {
 	return os.str();
 }
 
+std::string sha1_hash(const std::string& message) {
+	SHA1 sha1;
+	sha1.update(message);
+	return sha1.final();
+}
+
 int main(int argc, char* argv[]) {
 	// Flush after every std::cout / std::cerr
 	std::cout << std::unitbuf;
@@ -168,28 +169,28 @@ int main(int argc, char* argv[]) {
 					  << std::endl;
 			return 1;
 		}
-		// You can use print statements as follows for debugging, they'll be
-		// visible when running tests.
-		// std::cout << "Logs from your program will appear here!" << std::endl;
-
-		// Uncomment this block to pass the first stage
 		std::string encoded_value = argv[2];
 		json decoded_value = decode_bencoded_value(encoded_value);
 		std::cout << decoded_value.dump() << std::endl;
 	} else if (command == "info") {
+		if (argc < 3) {
+			std::cerr << "Usage: " << argv[0] << " info <filename>"
+					  << std::endl;
+			return 1;
+		}
 		std::string filename = argv[2];
 		json decoded_meta = parse_torrent_file(filename);
-		// std::cout << "decoded_info = " << decoded_info << std::endl;
+		// get tracker URL
 		std::string tracker_url = decoded_meta["announce"];
-		std::int64_t length = decoded_meta["info"]["length"];
 		std::cout << "Tracker URL: " + tracker_url + "\n";
+		// get length
+		std::int64_t length = decoded_meta["info"]["length"];
 		std::cout << "Length: " + std::to_string(length) + "\n";
+		// get info, bencode it and hash it
 		json info = decoded_meta["info"];
 		std::string encoded_info = json_to_bencode(info);
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
-		SHA1 sha1;
-		sha1.update(encoded_info);
-		std::string info_hash = sha1.final();
+		std::string info_hash = sha1_hash(encoded_info);
 		std::cout << "Info Hash: " << info_hash << std::endl;
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
