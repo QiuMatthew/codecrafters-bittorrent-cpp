@@ -161,6 +161,19 @@ std::string hex_string_to_bytes(const std::string& hex_string) {
 	return bytes;
 }
 
+std::string url_encode(const std::string& input) {
+	std::ostringstream encoded;
+	for (unsigned char c : input) {
+		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+			encoded << c;
+		} else {
+			encoded << '%' << std::hex << std::setw(2) << std::setfill('0')
+					<< (int)c;
+		}
+	}
+	return encoded.str();
+}
+
 int main(int argc, char* argv[]) {
 	// Flush after every std::cout / std::cerr
 	std::cout << std::unitbuf;
@@ -241,6 +254,8 @@ int main(int argc, char* argv[]) {
 		std::cout << "Info Hash: " << info_hash_hex << std::endl;
 		std::string info_hash_bytes = hex_string_to_bytes(info_hash_hex);
 		std::cout << "Info Hash Bytes: " << info_hash_bytes << std::endl;
+		std::string info_hash = url_encode(info_hash_bytes);
+		std::cout << "Info Hash URL Encoded: " << info_hash << std::endl;
 		// get peer id
 		std::string peer_id = "12345678901234567890";
 		std::cout << "Peer ID: " << peer_id << std::endl;
@@ -252,8 +267,8 @@ int main(int argc, char* argv[]) {
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		// send request to tracker
 		std::string request_url =
-			tracker_url + "?info_hash=" + info_hash_bytes +
-			"&peer_id=" + peer_id + "&port=" + std::to_string(port) +
+			tracker_url + "?info_hash=" + info_hash + "&peer_id=" + peer_id +
+			"&port=" + std::to_string(port) +
 			"&uploaded=0&downloaded=0&left=" + std::to_string(length) +
 			"&compact=1";
 		std::cout << "Request URL: " << request_url << std::endl;
@@ -261,7 +276,6 @@ int main(int argc, char* argv[]) {
 		http::Response response = request.send("GET");
 		std::string response_body{response.body.begin(), response.body.end()};
 		std::cout << "Response: " << response_body << std::endl;
-		// get peers
 		json decoded_response = decode_bencoded_value(response_body);
 		// if request failed, return 1
 		if (decoded_response.find("failure reason") != decoded_response.end()) {
@@ -269,11 +283,17 @@ int main(int argc, char* argv[]) {
 					  << decoded_response["failure reason"] << std::endl;
 			return 1;
 		}
-		std::vector<json> peers = decoded_response["peers"];
+		// get peers
+		std::string peers = decoded_response["peers"];
+		std::cout << "Peers: " << peers << std::endl;
 		std::cout << "Peers: " << std::endl;
-		for (const json& peer : peers) {
-			std::string ip = peer["ip"];
-			std::int64_t port = peer["port"];
+		for (size_t i = 0; i < peers.size(); i += 6) {
+			std::string ip = std::to_string((unsigned char)peers[i]) + "." +
+							 std::to_string((unsigned char)peers[i + 1]) + "." +
+							 std::to_string((unsigned char)peers[i + 2]) + "." +
+							 std::to_string((unsigned char)peers[i + 3]);
+			std::int64_t port =
+				(unsigned char)peers[i + 4] << 8 | (unsigned char)peers[i + 5];
 			std::cout << ip << ":" << port << std::endl;
 		}
 	} else {
