@@ -182,6 +182,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		json info = decoded_meta["info"];
 		// print info json
+		// std::cout << info.dump(4) << std::endl;
 		// std::cout << "Info JSON: " << std::endl;
 		// for (auto element : info.items()) {
 		// 	std::cout << element.key() << " : " << element.value() << std::endl;
