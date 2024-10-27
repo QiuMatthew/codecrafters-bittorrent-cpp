@@ -192,6 +192,12 @@ int main(int argc, char* argv[]) {
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
 		std::string info_hash = sha1_hash(encoded_info);
 		std::cout << "Info Hash: " << info_hash << std::endl;
+		// get piece length
+		std::int64_t piece_length = decoded_meta["info"]["piece length"];
+		std::cout << "Piece Length: " + std::to_string(piece_length) + "\n";
+		// get pieces
+		std::string pieces = decoded_meta["info"]["pieces"];
+		std::cout << "Pieces: " + pieces + "\n";
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
