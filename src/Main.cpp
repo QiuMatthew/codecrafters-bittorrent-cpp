@@ -6,8 +6,9 @@
 #include <sstream>
 #include <string>
 
+#include "lib/hash/sha1.hpp"
+#include "lib/http/HTTPRequest.hpp"
 #include "lib/nlohmann/json.hpp"
-#include "lib/sha1.hpp"
 
 using json = nlohmann::json;
 
@@ -210,6 +211,57 @@ int main(int argc, char* argv[]) {
 						  << (int)c;
 			}
 			std::cout << std::endl;
+		}
+	} else if (command == "peers") {
+		if (argc < 3) {
+			std::cerr << "Usage: " << argv[0] << " peer <filename>"
+					  << std::endl;
+			return 1;
+		}
+		std::string filename = argv[2];
+		json decoded_meta = parse_torrent_file(filename);
+		// get tracker URL
+		std::string tracker_url = decoded_meta["announce"];
+		std::cout << "Tracker URL: " + tracker_url + "\n";
+		// get info, bencode it and hash it
+		json info = decoded_meta["info"];
+		std::string encoded_info = json_to_bencode(info);
+		std::cout << "Encoded Info: " << encoded_info << std::endl;
+		std::string info_hash = sha1_hash(encoded_info);
+		std::cout << "Info Hash: " << info_hash << std::endl;
+		// get peer id
+		std::string peer_id = "-PC0001-123456789012";
+		std::cout << "Peer ID: " << peer_id << std::endl;
+		// get port
+		std::int64_t port = 6881;
+		std::cout << "Port: " << port << std::endl;
+		// get length
+		std::int64_t length = decoded_meta["info"]["length"];
+		std::cout << "Length: " + std::to_string(length) + "\n";
+		// send request to tracker
+		std::string request_url =
+			tracker_url + "?info_hash=" + info_hash + "&peer_id=" + peer_id +
+			"&port=" + std::to_string(port) +
+			"&uploaded=0&downloaded=0&left=" + std::to_string(length);
+		std::cout << "Request URL: " << request_url << std::endl;
+		http::Request request(request_url);
+		http::Response response = request.send("GET");
+		std::string response_body{response.body.begin(), response.body.end()};
+		std::cout << "Response: " << response_body << std::endl;
+		// get peers
+		json decoded_response = decode_bencoded_value(response_body);
+		// if request failed, return 1
+		if (decoded_response.find("failure reason") != decoded_response.end()) {
+			std::cerr << "Failed to get peers: "
+					  << decoded_response["failure reason"] << std::endl;
+			return 1;
+		}
+		std::vector<json> peers = decoded_response["peers"];
+		std::cout << "Peers: " << std::endl;
+		for (const json& peer : peers) {
+			std::string ip = peer["ip"];
+			std::int64_t port = peer["port"];
+			std::cout << ip << ":" << port << std::endl;
 		}
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
