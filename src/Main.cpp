@@ -1,3 +1,6 @@
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
@@ -296,6 +299,102 @@ int main(int argc, char* argv[]) {
 				(unsigned char)peers[i + 4] << 8 | (unsigned char)peers[i + 5];
 			std::cout << ip << ":" << port << std::endl;
 		}
+	} else if (command == "handshake") {
+		if (argc < 4) {
+			std::cerr << "Usage: " << argv[0]
+					  << " handshake <filename> <peer_ip:port>" << std::endl;
+			return 1;
+		}
+		std::string filename = argv[2];
+		std::string peer_ip_port = argv[3];
+		std::string peer_ip;
+		std::int64_t peer_port;
+		size_t colon_index = peer_ip_port.find(':');
+		if (colon_index != std::string::npos) {
+			peer_ip = peer_ip_port.substr(0, colon_index);
+			peer_port = std::stoll(peer_ip_port.substr(colon_index + 1));
+		} else {
+			std::cerr << "Invalid peer IP:Port: " << peer_ip_port << std::endl;
+			return 1;
+		}
+		// create a socket
+		int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		if (sockfd < 0) {
+			std::cerr << "Failed to create socket" << std::endl;
+			return 1;
+		}
+		// define the server address
+		struct sockaddr_in serv_addr;
+		serv_addr.sin_family = AF_INET;
+		serv_addr.sin_port = htons(peer_port);
+		if (inet_pton(AF_INET, peer_ip.c_str(), &serv_addr.sin_addr) <= 0) {
+			std::cerr << "Invalid address: " << peer_ip << std::endl;
+			return 1;
+		}
+		// connect to the server
+		if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) <
+			0) {
+			std::cerr << "Failed to connect to peer" << std::endl;
+			return 1;
+		}
+		// prepare handshake message
+		json decoded_meta = parse_torrent_file(filename);
+		std::string info_hash_hex =
+			sha1_hash(json_to_bencode(decoded_meta["info"]));
+		std::string info_hash_bytes = hex_string_to_bytes(info_hash_hex);
+		std::vector<char> handshake_message;
+		char protocol_length = 19;
+		handshake_message.push_back(protocol_length);
+		std::string protocol = "BitTorrent protocol";
+		for (char c : protocol) {
+			handshake_message.push_back(c);
+		}
+		for (int i = 0; i < 8; i++) {
+			handshake_message.push_back(0);
+		}
+		for (char c : info_hash_bytes) {
+			handshake_message.push_back(c);
+		}
+		std::string peer_id = "12345678901234567890";
+		for (char c : peer_id) {
+			handshake_message.push_back(c);
+		}
+		// send handshake message
+		if (send(sockfd, handshake_message.data(), handshake_message.size(),
+				 0) < 0) {
+			std::cerr << "Failed to send handshake message" << std::endl;
+			return 1;
+		}
+		// receive handshake message
+		std::vector<char> handshake_response(68);
+		if (recv(sockfd, handshake_response.data(), handshake_response.size(),
+				 0) < 0) {
+			std::cerr << "Failed to receive handshake response" << std::endl;
+			return 1;
+		}
+		// check handshake response
+		if (handshake_response[0] != 19) {
+			std::cerr << "Invalid protocol length: "
+					  << (int)handshake_response[0] << std::endl;
+			return 1;
+		}
+		std::string protocol_response(handshake_response.begin() + 1,
+									  handshake_response.begin() + 20);
+		if (protocol_response != "BitTorrent protocol") {
+			std::cerr << "Invalid protocol: " << protocol_response << std::endl;
+			return 1;
+		}
+		std::string info_hash_response(handshake_response.begin() + 28,
+									   handshake_response.begin() + 48);
+		if (info_hash_response != info_hash_bytes) {
+			std::cerr << "Invalid info hash: " << info_hash_response
+					  << std::endl;
+			return 1;
+		}
+		std::string peer_id_response(handshake_response.begin() + 48,
+									 handshake_response.begin() + 68);
+		std::cout << "Handshake successful" << std::endl;
+		std::cout << "Peer ID: " << peer_id_response << std::endl;
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
