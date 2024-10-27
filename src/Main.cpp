@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 		// Uncomment this block to pass the first stage
 		std::string encoded_value = argv[2];
 		json decoded_value = decode_bencoded_value(encoded_value);
-		// std::cout << decoded_value.dump() << std::endl;
+		std::cout << decoded_value.dump() << std::endl;
 	} else if (command == "info") {
 		std::string filename = argv[2];
 		json decoded_meta = parse_torrent_file(filename);
