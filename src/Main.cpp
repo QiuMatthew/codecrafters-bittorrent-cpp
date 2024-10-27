@@ -195,15 +195,15 @@ int main(int argc, char* argv[]) {
 		// get piece length
 		std::int64_t piece_length = decoded_meta["info"]["piece length"];
 		std::cout << "Piece Length: " + std::to_string(piece_length) + "\n";
-		// get piece hashes and print them in hex
+		// get piece hashes
 		std::string pieces = decoded_meta["info"]["pieces"];
 		std::cout << "Pieces: " << pieces << std::endl;
 		std::vector<std::string> piece_hashes;
 		for (size_t i = 0; i < pieces.size(); i += 20) {
 			piece_hashes.push_back(pieces.substr(i, 20));
 		}
-		std::cout << "Piece Hashes: " << std::endl;
 		// print in hex, filling with leading 0
+		std::cout << "Piece Hashes: " << std::endl;
 		for (const std::string& piece_hash : piece_hashes) {
 			for (unsigned char c : piece_hash) {
 				std::cout << std::hex << std::setw(2) << std::setfill('0')
