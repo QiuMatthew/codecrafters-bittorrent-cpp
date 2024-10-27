@@ -164,6 +164,14 @@ std::string hex_string_to_bytes(const std::string& hex_string) {
 	return bytes;
 }
 
+std::string byte_string_to_hex(const std::string& byte_string) {
+	std::ostringstream hex;
+	for (unsigned char c : byte_string) {
+		hex << std::hex << std::setw(2) << std::setfill('0') << (int)c;
+	}
+	return hex.str();
+}
+
 std::string url_encode(const std::string& input) {
 	std::ostringstream encoded;
 	for (unsigned char c : input) {
@@ -393,8 +401,9 @@ int main(int argc, char* argv[]) {
 		}
 		std::string peer_id_response(handshake_response.begin() + 48,
 									 handshake_response.begin() + 68);
+		std::string peer_id_hex = byte_string_to_hex(peer_id_response);
 		std::cout << "Handshake successful" << std::endl;
-		std::cout << "Peer ID: " << peer_id_response << std::endl;
+		std::cout << "Peer ID: " << peer_id_hex << std::endl;
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
