@@ -61,8 +61,8 @@ json decode_bencoded_list(const std::string& encoded_value, size_t& index) {
 }
 
 json decode_bencoded_dict(const std::string& encoded_value, size_t& index) {
-	nlohmann::ordered_map<std::string, json> map;
-	// json dict = json::object();
+	// nlohmann::ordered_map<std::string, json> map;
+	json dict = json::object();
 
 	index++;  // skip leading 'd'
 	while (index < encoded_value.size() - 1) {
@@ -82,11 +82,13 @@ json decode_bencoded_dict(const std::string& encoded_value, size_t& index) {
 			val = decode_bencoded_dict(encoded_value, index);
 		}
 
-		map.push_back({key, val});
+		// map.push_back({key, val});
+		dict[key.get<std::string>()] = val;
 	}
 
 	index++;  // skip ending 'e'
-	return json(map);
+			  // return json(map);
+	return dict;
 }
 
 json decode_bencoded_value(const std::string& encoded_value) {
