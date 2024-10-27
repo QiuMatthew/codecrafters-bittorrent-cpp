@@ -242,7 +242,8 @@ int main(int argc, char* argv[]) {
 		std::string request_url =
 			tracker_url + "?info_hash=" + info_hash + "&peer_id=" + peer_id +
 			"&port=" + std::to_string(port) +
-			"&uploaded=0&downloaded=0&left=" + std::to_string(length);
+			"&uploaded=0&downloaded=0&left=" + std::to_string(length) +
+			"&compact=1";
 		std::cout << "Request URL: " << request_url << std::endl;
 		http::Request request(request_url);
 		http::Response response = request.send("GET");
