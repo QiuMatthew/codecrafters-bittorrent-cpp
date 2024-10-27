@@ -203,10 +203,11 @@ int main(int argc, char* argv[]) {
 			piece_hashes.push_back(pieces.substr(i, 20));
 		}
 		std::cout << "Piece Hashes: " << std::endl;
-		// print in hex
+		// print in hex, filling with leading 0
 		for (const std::string& piece_hash : piece_hashes) {
 			for (unsigned char c : piece_hash) {
-				std::cout << std::hex << (int)c;
+				std::cout << std::hex << std::setw(2) << std::setfill('0')
+						  << (int)c;
 			}
 			std::cout << std::endl;
 		}
