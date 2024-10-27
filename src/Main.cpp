@@ -436,7 +436,7 @@ int main(int argc, char* argv[]) {
 		}
 		std::string output_file = argv[3];
 		std::string filename = argv[4];
-		std::int64_t piece_index = std::stoll(argv[5]);
+		std::int32_t piece_index = std::stoll(argv[5]);
 		json decoded_meta = parse_torrent_file(filename);
 		std::vector<std::string> peer_list = get_peer_list(decoded_meta);
 		std::string peer_ip_port = peer_list[0];
@@ -487,12 +487,13 @@ int main(int argc, char* argv[]) {
 		}
 		std::int64_t remaining_length = piece_length;
 		for (std::int64_t i = 0; i < num_blocks; i++) {
-			std::int64_t block_offset = i * block_size;
-			std::int64_t block_length = std::min(remaining_length, block_size);
+			std::int32_t block_offset = i * block_size;
+			std::int32_t block_length = std::min(remaining_length, block_size);
 			std::vector<char> request_message = {0, 0, 0, 13, 6};
-			request_message.push_back(piece_index);
-			request_message.push_back(block_offset);
-			request_message.push_back(block_length);
+			request_message.push_back((piece_offset + block_offset) >> 24);
+			request_message.push_back((piece_offset + block_offset) >> 16);
+			request_message.push_back((piece_offset + block_offset) >> 8);
+			request_message.push_back((piece_offset + block_offset));
 			if (send(sockfd, request_message.data(), request_message.size(),
 					 0) < 0) {
 				std::cerr << "Failed to send request message" << std::endl;
