@@ -151,6 +151,16 @@ std::string sha1_hash(const std::string& message) {
 	return sha1.final();
 }
 
+std::string hex_string_to_bytes(const std::string& hex_string) {
+	std::string bytes;
+	for (size_t i = 0; i < hex_string.size(); i += 2) {
+		std::string byte_string = hex_string.substr(i, 2);
+		char byte = (char)std::strtol(byte_string.c_str(), nullptr, 16);
+		bytes.push_back(byte);
+	}
+	return bytes;
+}
+
 int main(int argc, char* argv[]) {
 	// Flush after every std::cout / std::cerr
 	std::cout << std::unitbuf;
@@ -229,6 +239,8 @@ int main(int argc, char* argv[]) {
 		std::cout << "Encoded Info: " << encoded_info << std::endl;
 		std::string info_hash = sha1_hash(encoded_info);
 		std::cout << "Info Hash: " << info_hash << std::endl;
+		std::string info_hash_bytes = hex_string_to_bytes(info_hash);
+		std::cout << "Info Hash Bytes: " << info_hash_bytes << std::endl;
 		// get peer id
 		std::string peer_id = "-PC0001-123456789012";
 		std::cout << "Peer ID: " << peer_id << std::endl;
@@ -240,8 +252,8 @@ int main(int argc, char* argv[]) {
 		std::cout << "Length: " + std::to_string(length) + "\n";
 		// send request to tracker
 		std::string request_url =
-			tracker_url + "?info_hash=" + info_hash + "&peer_id=" + peer_id +
-			"&port=" + std::to_string(port) +
+			tracker_url + "?info_hash=" + info_hash_bytes +
+			"&peer_id=" + peer_id + "&port=" + std::to_string(port) +
 			"&uploaded=0&downloaded=0&left=" + std::to_string(length) +
 			"&compact=1";
 		std::cout << "Request URL: " << request_url << std::endl;
