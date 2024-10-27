@@ -1,5 +1,4 @@
 #include <arpa/inet.h>
-#include <sys/_types/_u_int.h>
 #include <sys/socket.h>
 
 #include <cctype>
