@@ -523,6 +523,7 @@ int main(int argc, char* argv[]) {
 			std::string piece_hashes = decoded_meta["info"]["pieces"];
 			std::string expected_piece_hash =
 				piece_hashes.substr(piece_index * 20, 20);
+			expected_piece_hash = byte_string_to_hex(expected_piece_hash);
 			std::cout << "Expected piece hash: " << expected_piece_hash
 					  << std::endl;
 			if (piece_hash != expected_piece_hash) {
