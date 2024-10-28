@@ -516,6 +516,19 @@ int main(int argc, char* argv[]) {
 				std::cerr << "Failed to receive piece message" << std::endl;
 				return 1;
 			}
+			// check hash of piece
+			std::string piece_data(piece_message.data() + 13, block_size);
+			std::string piece_hash = sha1_hash(piece_data);
+			std::cout << "Piece hash: " << piece_hash << std::endl;
+			std::string piece_hashes = decoded_meta["info"]["pieces"];
+			std::string expected_piece_hash =
+				piece_hashes.substr(piece_index * 20, 20);
+			std::cout << "Expected piece hash: " << expected_piece_hash
+					  << std::endl;
+			if (piece_hash != expected_piece_hash) {
+				std::cerr << "Invalid piece hash: " << piece_hash << std::endl;
+				return 1;
+			}
 			// open output file with append mode
 			std::ofstream output(output_file, std::ios::binary | std::ios::app);
 			// write block to output file
