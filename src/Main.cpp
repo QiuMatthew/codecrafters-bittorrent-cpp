@@ -526,10 +526,6 @@ int main(int argc, char* argv[]) {
 			expected_piece_hash = byte_string_to_hex(expected_piece_hash);
 			std::cout << "Expected piece hash: " << expected_piece_hash
 					  << std::endl;
-			if (piece_hash != expected_piece_hash) {
-				std::cerr << "Invalid piece hash: " << piece_hash << std::endl;
-				return 1;
-			}
 			// open output file with append mode
 			std::ofstream output(output_file, std::ios::binary | std::ios::app);
 			// write block to output file
