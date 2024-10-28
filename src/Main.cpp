@@ -509,28 +509,18 @@ int main(int argc, char* argv[]) {
 				std::cerr << "Failed to send request message" << std::endl;
 				return 1;
 			}
-			// receive piece message
-			std::vector<char> piece_message(13 + block_size);
-			if (recv(sockfd, piece_message.data(), piece_message.size(), 0) <
+			// receive block message
+			std::vector<char> block_content(9 + block_size);
+			if (recv(sockfd, block_content.data(), block_content.size(), 0) <
 				0) {
 				std::cerr << "Failed to receive piece message" << std::endl;
 				return 1;
 			}
-			// check hash of piece
-			std::string piece_data(piece_message.data() + 13, block_size);
-			std::string piece_hash = sha1_hash(piece_data);
-			std::cout << "Piece hash: " << piece_hash << std::endl;
-			std::string piece_hashes = decoded_meta["info"]["pieces"];
-			std::string expected_piece_hash =
-				piece_hashes.substr(piece_index * 20, 20);
-			expected_piece_hash = byte_string_to_hex(expected_piece_hash);
-			std::cout << "Expected piece hash: " << expected_piece_hash
-					  << std::endl;
 			// open output file with append mode
 			std::ofstream output(output_file, std::ios::binary | std::ios::app);
 			// write block to output file
 			if (output) {
-				output.write(piece_message.data() + 13, block_size);
+				output.write(block_content.data() + 9, block_size);
 				output.close();
 			} else {
 				std::cerr << "Failed to open output file: " << output_file
