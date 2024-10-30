@@ -533,6 +533,16 @@ int main(int argc, char* argv[]) {
 				std::cerr << "Failed to receive piece message" << std::endl;
 				return 1;
 			}
+			if (block_content[4] != 7) {
+				std::cerr << "Invalid block message: " << (int)block_content[4]
+						  << std::endl;
+				return 1;
+			}
+			if (block_content.size() != 9 + curr_block_length) {
+				std::cerr << "Invalid block length: " << block_content.size()
+						  << std::endl;
+				return 1;
+			}
 			// open output file with append mode
 			std::ofstream output(output_file, std::ios::binary | std::ios::app);
 			// write block to output file
