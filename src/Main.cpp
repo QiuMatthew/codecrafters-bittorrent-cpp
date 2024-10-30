@@ -467,18 +467,20 @@ int main(int argc, char* argv[]) {
 		std::cout << "Handshake successful" << std::endl;
 		std::cout << "Peer ID: " << peer_id_hex << std::endl;
 		// wait for bitfield message
-		std::vector<char> message_length_prefix(4);
-		if (recv(sockfd, message_length_prefix.data(),
-				 message_length_prefix.size(), 0) < 0) {
+		std::vector<char> bitfield_message_length_prefix(4);
+		if (recv(sockfd, bitfield_message_length_prefix.data(),
+				 bitfield_message_length_prefix.size(), 0) < 0) {
 			std::cerr << "Failed to receive message length" << std::endl;
 			return 1;
 		}
-		std::int32_t message_length = (message_length_prefix[0] << 24) |
-									  (message_length_prefix[1] << 16) |
-									  (message_length_prefix[2] << 8) |
-									  message_length_prefix[3];
-		std::cout << "Message Length: " << message_length << std::endl;
-		std::vector<char> bitfield_message(message_length);
+		std::int32_t bitfield_message_length =
+			(bitfield_message_length_prefix[0] << 24) |
+			(bitfield_message_length_prefix[1] << 16) |
+			(bitfield_message_length_prefix[2] << 8) |
+			bitfield_message_length_prefix[3];
+		std::cout << "Bitfield Message Length: " << bitfield_message_length
+				  << std::endl;
+		std::vector<char> bitfield_message(bitfield_message_length);
 		if (recv(sockfd, bitfield_message.data(), bitfield_message.size(), 0) <
 			0) {
 			std::cerr << "Failed to receive bitfield message" << std::endl;
@@ -501,7 +503,18 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		// wait for unchoke message
-		std::vector<char> unchoke_message(5);
+		std::vector<char> unchoke_message_length_prefix(4);
+		if (recv(sockfd, unchoke_message_length_prefix.data(),
+				 unchoke_message_length_prefix.size(), 0) < 0) {
+			std::cerr << "Failed to receive message length" << std::endl;
+			return 1;
+		}
+		std::int32_t unchoke_message_length =
+			(unchoke_message_length_prefix[0] << 24) |
+			(unchoke_message_length_prefix[1] << 16) |
+			(unchoke_message_length_prefix[2] << 8) |
+			unchoke_message_length_prefix[3];
+		std::vector<char> unchoke_message(unchoke_message_length);
 		if (recv(sockfd, unchoke_message.data(), unchoke_message.size(), 0) <
 			0) {
 			std::cerr << "Failed to receive unchoke message" << std::endl;
