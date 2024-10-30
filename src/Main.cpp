@@ -500,11 +500,14 @@ int main(int argc, char* argv[]) {
 			num_blocks++;
 		}
 		std::cout << "Num Blocks: " << num_blocks << std::endl;
-		std::int64_t remaining_length = piece_length;
+		std::int64_t remaining_length = curr_piece_length;
 		for (std::int64_t i = 0; i < num_blocks; i++) {
 			std::int32_t block_offset = i * block_length;
+			std::cout << "Block Offset: " << block_offset << std::endl;
 			std::int32_t curr_block_length =
 				std::min(remaining_length, block_length);
+			std::cout << "Current Block Length: " << curr_block_length
+					  << std::endl;
 			std::vector<char> request_message = {0, 0, 0, 13, 6};
 			request_message.push_back(piece_index >> 24);
 			request_message.push_back(piece_index >> 16);
