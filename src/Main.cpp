@@ -489,7 +489,8 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		std::cout << "Received bitfield message" << std::endl;
-		std::cout << "Message contet: " << bitfield_message.data() << std::endl;
+		std::cout << "Message content: "
+				  << byte_string_to_hex(bitfield_message.data()) << std::endl;
 		// send interested message
 		const u_int INTERESTED = 2;
 		std::vector<char> interested_message = {0, 0, 0, 1, INTERESTED};
