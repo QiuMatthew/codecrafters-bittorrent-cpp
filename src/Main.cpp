@@ -490,7 +490,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		std::cout << "Received bitfield message" << std::endl;
-		std::cout << "Message content: "
+		std::cout << "Bitfield message content: "
 				  << byte_string_to_hex(bitfield_message.data()) << std::endl;
 		// send interested message
 		const u_int INTERESTED = 2;
@@ -512,6 +512,9 @@ int main(int argc, char* argv[]) {
 					  << std::endl;
 			return 1;
 		}
+		std::cout << "Received unchoke message" << std::endl;
+		std::cout << "Unchoke message content: "
+				  << byte_string_to_hex(unchoke_message.data()) << std::endl;
 		// send request message
 		std::int64_t file_length = get_length(decoded_meta);
 		std::cout << "File Length: " << file_length << std::endl;
