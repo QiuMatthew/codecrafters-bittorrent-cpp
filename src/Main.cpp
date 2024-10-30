@@ -491,9 +491,9 @@ int main(int argc, char* argv[]) {
 		std::cout << "Piece Length: " << piece_length << std::endl;
 		std::int64_t piece_offset = piece_index * piece_length;
 		std::cout << "Piece Offset: " << piece_offset << std::endl;
-		std::int64_t piece_size =
+		std::int64_t curr_piece_length =
 			std::min(piece_length, file_length - piece_offset);
-		std::cout << "Piece Size: " << piece_size << std::endl;
+		std::cout << "Current Piece Length: " << curr_piece_length << std::endl;
 		std::int64_t block_length = 16384;	// 2^14 bytes = 16 KB
 		std::int64_t num_blocks = piece_length / block_length;
 		if (piece_length % block_length != 0) {
@@ -503,7 +503,8 @@ int main(int argc, char* argv[]) {
 		std::int64_t remaining_length = piece_length;
 		for (std::int64_t i = 0; i < num_blocks; i++) {
 			std::int32_t block_offset = i * block_length;
-			std::int32_t block_size = std::min(remaining_length, block_length);
+			std::int32_t curr_block_length =
+				std::min(remaining_length, block_length);
 			std::vector<char> request_message = {0, 0, 0, 13, 6};
 			request_message.push_back(piece_index >> 24);
 			request_message.push_back(piece_index >> 16);
@@ -513,17 +514,17 @@ int main(int argc, char* argv[]) {
 			request_message.push_back(block_offset >> 16);
 			request_message.push_back(block_offset >> 8);
 			request_message.push_back(block_offset);
-			request_message.push_back(block_size >> 24);
-			request_message.push_back(block_size >> 16);
-			request_message.push_back(block_size >> 8);
-			request_message.push_back(block_size);
+			request_message.push_back(curr_block_length >> 24);
+			request_message.push_back(curr_block_length >> 16);
+			request_message.push_back(curr_block_length >> 8);
+			request_message.push_back(curr_block_length);
 			if (send(sockfd, request_message.data(), request_message.size(),
 					 0) < 0) {
 				std::cerr << "Failed to send request message" << std::endl;
 				return 1;
 			}
 			// receive block message
-			std::vector<char> block_content(9 + block_size);
+			std::vector<char> block_content(9 + curr_block_length);
 			if (recv(sockfd, block_content.data(), block_content.size(), 0) <
 				0) {
 				std::cerr << "Failed to receive piece message" << std::endl;
@@ -533,14 +534,14 @@ int main(int argc, char* argv[]) {
 			std::ofstream output(output_file, std::ios::binary | std::ios::app);
 			// write block to output file
 			if (output) {
-				output.write(block_content.data() + 9, block_size);
+				output.write(block_content.data() + 9, curr_block_length);
 				output.close();
 			} else {
 				std::cerr << "Failed to open output file: " << output_file
 						  << std::endl;
 				return 1;
 			}
-			remaining_length -= block_size;
+			remaining_length -= curr_block_length;
 		}
 		std::cout << "Downloaded piece " << piece_index << std::endl;
 	} else {
