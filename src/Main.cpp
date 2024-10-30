@@ -477,6 +477,7 @@ int main(int argc, char* argv[]) {
 									  (message_length_prefix[1] << 16) |
 									  (message_length_prefix[2] << 8) |
 									  message_length_prefix[3];
+		std::cout << "Message Length: " << message_length << std::endl;
 		std::vector<char> bitfield_message(message_length);
 		if (recv(sockfd, bitfield_message.data(), bitfield_message.size(), 0) <
 			0) {
