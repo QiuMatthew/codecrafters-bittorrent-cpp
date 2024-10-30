@@ -438,8 +438,13 @@ int main(int argc, char* argv[]) {
 		std::string filename = argv[4];
 		std::int32_t piece_index = std::stoll(argv[5]);
 		json decoded_meta = parse_torrent_file(filename);
-		std::cout << "Decoded Meta: " << decoded_meta.dump() << std::endl;
+		// get peer list
 		std::vector<std::string> peer_list = get_peer_list(decoded_meta);
+		if (peer_list.empty()) {
+			std::cerr << "Failed to get peer list" << std::endl;
+			return 1;
+		}
+		// get first peer
 		std::string peer_ip_port = peer_list[0];
 		std::string peer_ip;
 		std::int64_t peer_port;
@@ -451,6 +456,7 @@ int main(int argc, char* argv[]) {
 			std::cerr << "Invalid peer IP:Port: " << peer_ip_port << std::endl;
 			return 1;
 		}
+		// handshake
 		int sockfd = 0;
 		std::string peer_id_hex =
 			handshake(filename, peer_ip, peer_port, sockfd);
@@ -479,10 +485,13 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		// send request message
-		std::int64_t length = get_length(decoded_meta);
+		std::int64_t file_length = get_length(decoded_meta);
+		std::cout << "File Length: " << file_length << std::endl;
 		std::int64_t piece_length = decoded_meta["info"]["piece length"];
+		std::cout << "Piece Length: " << piece_length << std::endl;
 		std::int64_t piece_offset = piece_index * piece_length;
-		std::int64_t piece_size = std::min(piece_length, length - piece_offset);
+		std::int64_t piece_size =
+			std::min(piece_length, file_length - piece_offset);
 		std::int64_t block_length = 16384;	// 2^14 bytes = 16 KB
 		std::int64_t num_blocks = piece_length / block_length;
 		if (piece_length % block_length != 0) {
