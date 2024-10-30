@@ -495,7 +495,7 @@ int main(int argc, char* argv[]) {
 			std::min(piece_length, file_length - piece_offset);
 		std::cout << "Current Piece Length: " << curr_piece_length << std::endl;
 		std::int64_t block_length = 16384;	// 2^14 bytes = 16 KB
-		std::int64_t num_blocks = piece_length / block_length;
+		std::int64_t num_blocks = curr_piece_length / block_length;
 		if (piece_length % block_length != 0) {
 			num_blocks++;
 		}
