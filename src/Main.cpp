@@ -438,6 +438,7 @@ int main(int argc, char* argv[]) {
 		std::string filename = argv[4];
 		std::int32_t piece_index = std::stoll(argv[5]);
 		json decoded_meta = parse_torrent_file(filename);
+		std::cout << "Decoded Meta: " << decoded_meta.dump() << std::endl;
 		std::vector<std::string> peer_list = get_peer_list(decoded_meta);
 		std::string peer_ip_port = peer_list[0];
 		std::string peer_ip;
