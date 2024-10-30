@@ -473,6 +473,11 @@ int main(int argc, char* argv[]) {
 			std::cerr << "Failed to receive bitfield message" << std::endl;
 			return 1;
 		}
+		if (bitfield_message[4] != 5) {
+			std::cerr << "Invalid bitfield message: "
+					  << (int)bitfield_message[4];
+			return 1;
+		}
 		// send interested message
 		const u_int INTERESTED = 2;
 		std::vector<char> interested_message = {0, 0, 0, 1, INTERESTED};
