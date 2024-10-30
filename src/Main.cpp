@@ -527,7 +527,7 @@ int main(int argc, char* argv[]) {
 				return 1;
 			}
 			// receive block message
-			std::vector<char> block_content(9 + curr_block_length);
+			std::vector<char> block_content(5 + curr_block_length);
 			if (recv(sockfd, block_content.data(), block_content.size(), 0) <
 				0) {
 				std::cerr << "Failed to receive piece message" << std::endl;
@@ -538,7 +538,7 @@ int main(int argc, char* argv[]) {
 						  << std::endl;
 				return 1;
 			}
-			if (block_content.size() != 9 + curr_block_length) {
+			if (block_content.size() != 5 + curr_block_length) {
 				std::cerr << "Invalid block length: " << block_content.size()
 						  << std::endl;
 				return 1;
