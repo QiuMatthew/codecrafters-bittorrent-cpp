@@ -467,15 +467,25 @@ int main(int argc, char* argv[]) {
 		std::cout << "Handshake successful" << std::endl;
 		std::cout << "Peer ID: " << peer_id_hex << std::endl;
 		// wait for bitfield message
-		std::vector<char> bitfield_message(5);
+		std::vector<char> message_length_prefix(4);
+		if (recv(sockfd, message_length_prefix.data(),
+				 message_length_prefix.size(), 0) < 0) {
+			std::cerr << "Failed to receive message length" << std::endl;
+			return 1;
+		}
+		std::int32_t message_length = (message_length_prefix[0] << 24) |
+									  (message_length_prefix[1] << 16) |
+									  (message_length_prefix[2] << 8) |
+									  message_length_prefix[3];
+		std::vector<char> bitfield_message(message_length);
 		if (recv(sockfd, bitfield_message.data(), bitfield_message.size(), 0) <
 			0) {
 			std::cerr << "Failed to receive bitfield message" << std::endl;
 			return 1;
 		}
-		if (bitfield_message[4] != 5) {
+		if (bitfield_message[0] != 5) {
 			std::cerr << "Invalid bitfield message: "
-					  << (int)bitfield_message[4];
+					  << (int)bitfield_message[0];
 			return 1;
 		}
 		std::cout << "Received bitfield message" << std::endl;
