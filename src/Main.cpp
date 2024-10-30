@@ -490,13 +490,16 @@ int main(int argc, char* argv[]) {
 		std::int64_t piece_length = decoded_meta["info"]["piece length"];
 		std::cout << "Piece Length: " << piece_length << std::endl;
 		std::int64_t piece_offset = piece_index * piece_length;
+		std::cout << "Piece Offset: " << piece_offset << std::endl;
 		std::int64_t piece_size =
 			std::min(piece_length, file_length - piece_offset);
+		std::cout << "Piece Size: " << piece_size << std::endl;
 		std::int64_t block_length = 16384;	// 2^14 bytes = 16 KB
 		std::int64_t num_blocks = piece_length / block_length;
 		if (piece_length % block_length != 0) {
 			num_blocks++;
 		}
+		std::cout << "Num Blocks: " << num_blocks << std::endl;
 		std::int64_t remaining_length = piece_length;
 		for (std::int64_t i = 0; i < num_blocks; i++) {
 			std::int32_t block_offset = i * block_length;
