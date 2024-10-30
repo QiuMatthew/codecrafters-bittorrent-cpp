@@ -514,6 +514,8 @@ int main(int argc, char* argv[]) {
 			(unchoke_message_length_prefix[1] << 16) |
 			(unchoke_message_length_prefix[2] << 8) |
 			unchoke_message_length_prefix[3];
+		std::cout << "Unchoke Message Length: " << unchoke_message_length
+				  << std::endl;
 		std::vector<char> unchoke_message(unchoke_message_length);
 		if (recv(sockfd, unchoke_message.data(), unchoke_message.size(), 0) <
 			0) {
