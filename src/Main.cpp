@@ -250,6 +250,10 @@ std::vector<std::string> get_peer_list(const json& decoded_meta) {
 			(unsigned char)peers[i + 4] << 8 | (unsigned char)peers[i + 5];
 		peer_list.push_back(ip + ":" + std::to_string(port));
 	}
+	std::cout << "Peer List: " << std::endl;
+	for (const std::string& peer : peer_list) {
+		std::cout << peer << std::endl;
+	}
 	return peer_list;
 }
 
