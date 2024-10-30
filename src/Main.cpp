@@ -484,6 +484,11 @@ int main(int argc, char* argv[]) {
 			std::cerr << "Failed to receive unchoke message" << std::endl;
 			return 1;
 		}
+		if (unchoke_message[4] != 1) {
+			std::cerr << "Invalid unchoke message: " << (int)unchoke_message[4]
+					  << std::endl;
+			return 1;
+		}
 		// send request message
 		std::int64_t file_length = get_length(decoded_meta);
 		std::cout << "File Length: " << file_length << std::endl;
