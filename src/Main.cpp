@@ -579,7 +579,7 @@ int main(int argc, char* argv[]) {
 			}
 			std::cout << "Sent request message" << std::endl;
 			// receive block message
-			std::vector<char> block_message_length_prefix(4);
+			std::vector<char> block_message_length_prefix(4, 0);
 			if (recv(sockfd, block_message_length_prefix.data(),
 					 block_message_length_prefix.size(), 0) < 0) {
 				std::cerr << "Failed to receive message length" << std::endl;
