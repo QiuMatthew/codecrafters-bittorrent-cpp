@@ -646,8 +646,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Downloaded piece " << piece_index << std::endl; */
 
 		std::int64_t remaining_length = curr_piece_length;
-		std::int32_t block_offset =
-			0;	// Initialize block_offset outside the loop
+		std::int32_t block_offset = 0;
 		for (std::int64_t i = 0; i < num_blocks; i++) {
 			std::int32_t curr_block_length =
 				std::min(remaining_length, block_length);
@@ -702,7 +701,7 @@ int main(int argc, char* argv[]) {
 			// Receive the actual block message
 			std::vector<char> block_message(block_message_length + 1);
 			ssize_t received_bytes = 0;
-			while (received_bytes < block_message.size()) {
+			while (received_bytes < block_message_length + 1) {
 				ssize_t result =
 					recv(sockfd, block_message.data() + received_bytes,
 						 block_message.size() - received_bytes, 0);
