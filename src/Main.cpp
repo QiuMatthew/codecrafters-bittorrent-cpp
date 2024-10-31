@@ -521,9 +521,9 @@ int main(int argc, char* argv[]) {
 			static_cast<std::uint8_t>(unchoke_message_length_prefix[3]);
 		std::cout << "Unchoke Message Length: " << unchoke_message_length
 				  << std::endl;
-		std::vector<char> unchoke_message(unchoke_message_length);
-		if (recv(sockfd, unchoke_message.data(), unchoke_message_length, 0) <
-			0) {
+		std::vector<char> unchoke_message(unchoke_message_length + 1);
+		if (recv(sockfd, unchoke_message.data(), unchoke_message_length + 1,
+				 0) < 0) {
 			std::cerr << "Failed to receive unchoke message" << std::endl;
 			return 1;
 		}
