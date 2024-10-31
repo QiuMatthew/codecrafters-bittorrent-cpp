@@ -631,6 +631,8 @@ int main(int argc, char* argv[]) {
 			}
 			remaining_length -= curr_block_length;
 			std::cout << "Downloaded block " << i << std::endl;
+			std::cout << "==============================================="
+					  << std::endl;
 		}
 		std::cout << "Downloaded piece " << piece_index << std::endl;
 	} else {
