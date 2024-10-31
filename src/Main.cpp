@@ -528,7 +528,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		if (unchoke_message[0] != 1) {
-			std::cerr << "Invalid unchoke message: " << (int)unchoke_message[4]
+			std::cerr << "Invalid unchoke message: " << (int)unchoke_message[0]
 					  << std::endl;
 			return 1;
 		}
@@ -578,27 +578,50 @@ int main(int argc, char* argv[]) {
 				return 1;
 			}
 			// receive block message
-			std::vector<char> block_content(5 + curr_block_length);
-			if (recv(sockfd, block_content.data(), block_content.size(), 0) <
+			std::vector<char> block_message_length_prefix(4);
+			if (recv(sockfd, block_message_length_prefix.data(),
+					 block_message_length_prefix.size(), 0) < 0) {
+				std::cerr << "Failed to receive message length" << std::endl;
+				return 1;
+			}
+			std::int32_t block_message_length =
+				(static_cast<std::uint8_t>(block_message_length_prefix[0])
+				 << 24) |
+				(static_cast<std::uint8_t>(block_message_length_prefix[1])
+				 << 16) |
+				(static_cast<std::uint8_t>(block_message_length_prefix[2])
+				 << 8) |
+				static_cast<std::uint8_t>(block_message_length_prefix[3]);
+			std::cout << "Block Message Length: " << block_message_length
+					  << std::endl;
+
+			std::vector<char> block_message(block_message_length + 1);
+			if (recv(sockfd, block_message.data(), block_message.size(), 0) <
 				0) {
 				std::cerr << "Failed to receive piece message" << std::endl;
 				return 1;
 			}
-			if (block_content[4] != 7) {
-				std::cerr << "Invalid block message: " << (int)block_content[4]
+			if (block_message[0] != 7) {
+				std::cerr << "Invalid block message: " << (int)block_message[0]
 						  << std::endl;
 				return 1;
 			}
-			if (block_content.size() != 5 + curr_block_length) {
-				std::cerr << "Invalid block length: " << block_content.size()
-						  << std::endl;
-				return 1;
-			}
+			std::cout << "Received block message" << std::endl;
+			std::int32_t received_piece_index =
+				(block_message[1] << 24) | (block_message[2] << 16) |
+				(block_message[3] << 8) | block_message[4];
+			std::cout << "Received Piece Index: " << received_piece_index
+					  << std::endl;
+			std::int32_t received_block_offset =
+				(block_message[5] << 24) | (block_message[6] << 16) |
+				(block_message[7] << 8) | block_message[8];
+			std::cout << "Received Block Offset: " << received_block_offset
+					  << std::endl;
 			// open output file with append mode
 			std::ofstream output(output_file, std::ios::binary | std::ios::app);
 			// write block to output file
 			if (output) {
-				output.write(block_content.data() + 9, curr_block_length);
+				output.write(block_message.data() + 9, curr_block_length);
 				output.close();
 			} else {
 				std::cerr << "Failed to open output file: " << output_file
