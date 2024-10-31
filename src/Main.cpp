@@ -551,7 +551,7 @@ int main(int argc, char* argv[]) {
 			num_blocks++;
 		}
 		std::cout << "Num Blocks: " << num_blocks << std::endl;
-		std::int64_t remaining_length = curr_piece_length;
+		/* std::int64_t remaining_length = curr_piece_length;
 		for (std::int64_t i = 0; i < num_blocks; i++) {
 			std::int32_t block_offset = i * block_length;
 			std::cout << "Block Offset: " << block_offset << std::endl;
@@ -643,7 +643,100 @@ int main(int argc, char* argv[]) {
 			std::cout << "==============================================="
 					  << std::endl;
 		}
-		std::cout << "Downloaded piece " << piece_index << std::endl;
+		std::cout << "Downloaded piece " << piece_index << std::endl; */
+
+		std::int64_t remaining_length = curr_piece_length;
+		std::int32_t block_offset =
+			0;	// Initialize block_offset outside the loop
+		for (std::int64_t i = 0; i < num_blocks; i++) {
+			std::int32_t curr_block_length =
+				std::min(remaining_length, block_length);
+			std::cout << "Current Block Length: " << curr_block_length
+					  << std::endl;
+
+			// Prepare the request message
+			std::vector<char> request_message = {0, 0, 0, 13, 6};
+			request_message.push_back(piece_index >> 24);
+			request_message.push_back(piece_index >> 16);
+			request_message.push_back(piece_index >> 8);
+			request_message.push_back(piece_index);
+			request_message.push_back(block_offset >> 24);
+			request_message.push_back(block_offset >> 16);
+			request_message.push_back(block_offset >> 8);
+			request_message.push_back(block_offset);
+			request_message.push_back(curr_block_length >> 24);
+			request_message.push_back(curr_block_length >> 16);
+			request_message.push_back(curr_block_length >> 8);
+			request_message.push_back(curr_block_length);
+
+			// Send the request
+			if (send(sockfd, request_message.data(), request_message.size(),
+					 0) < 0) {
+				std::cerr << "Failed to send request message" << std::endl;
+				return 1;
+			}
+			std::cout << "Sent request message" << std::endl;
+
+			// Receive the block message length prefix in a loop
+			std::vector<char> block_message_length_prefix(4, 0);
+			for (int j = 0; j < 4; j++) {
+				if (recv(sockfd, block_message_length_prefix.data() + j, 1, 0) <
+					0) {
+					std::cerr << "Failed to receive message length"
+							  << std::endl;
+					return 1;
+				}
+			}
+
+			std::int32_t block_message_length =
+				(static_cast<std::uint8_t>(block_message_length_prefix[0])
+				 << 24) |
+				(static_cast<std::uint8_t>(block_message_length_prefix[1])
+				 << 16) |
+				(static_cast<std::uint8_t>(block_message_length_prefix[2])
+				 << 8) |
+				static_cast<std::uint8_t>(block_message_length_prefix[3]);
+			std::cout << "Block Message Length: " << block_message_length
+					  << std::endl;
+
+			// Receive the actual block message
+			std::vector<char> block_message(block_message_length + 1);
+			ssize_t received_bytes = 0;
+			while (received_bytes < block_message.size()) {
+				ssize_t result =
+					recv(sockfd, block_message.data() + received_bytes,
+						 block_message.size() - received_bytes, 0);
+				if (result <= 0) {
+					std::cerr << "Failed to receive piece message" << std::endl;
+					return 1;
+				}
+				received_bytes += result;
+			}
+
+			// Validate message type
+			if (block_message[0] != 7) {
+				std::cerr << "Invalid block message: " << (int)block_message[0]
+						  << std::endl;
+				return 1;
+			}
+
+			// Write block to output file
+			std::ofstream output(output_file, std::ios::binary | std::ios::app);
+			if (output) {
+				output.write(block_message.data() + 9, curr_block_length);
+				output.close();
+			} else {
+				std::cerr << "Failed to open output file: " << output_file
+						  << std::endl;
+				return 1;
+			}
+
+			remaining_length -= curr_block_length;
+			block_offset += curr_block_length;	// Move to the next block offset
+			std::cout << "Downloaded block " << i << std::endl;
+			std::cout << "==============================================="
+					  << std::endl;
+		}
 	} else {
 		std::cerr << "unknown command: " << command << std::endl;
 		return 1;
