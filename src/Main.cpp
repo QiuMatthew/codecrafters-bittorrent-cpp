@@ -580,12 +580,17 @@ int main(int argc, char* argv[]) {
 			std::cout << "Sent request message" << std::endl;
 			// receive block message
 			std::vector<char> block_message_length_prefix(4, 0);
+			block_message_length_prefix[0] = 0;
+			block_message_length_prefix[1] = 0;
+			block_message_length_prefix[2] = 0;
+			block_message_length_prefix[3] = 0;
 			if (recv(sockfd, block_message_length_prefix.data(),
 					 block_message_length_prefix.size(), 0) < 0) {
 				std::cerr << "Failed to receive message length" << std::endl;
 				return 1;
 			}
-			std::int32_t block_message_length =
+			std::int32_t block_message_length = 0;
+			block_message_length =
 				(static_cast<std::uint8_t>(block_message_length_prefix[0])
 				 << 24) |
 				(static_cast<std::uint8_t>(block_message_length_prefix[1])
