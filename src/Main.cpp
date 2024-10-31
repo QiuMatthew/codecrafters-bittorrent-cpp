@@ -577,6 +577,7 @@ int main(int argc, char* argv[]) {
 				std::cerr << "Failed to send request message" << std::endl;
 				return 1;
 			}
+			std::cout << "Sent request message" << std::endl;
 			// receive block message
 			std::vector<char> block_message_length_prefix(4);
 			if (recv(sockfd, block_message_length_prefix.data(),
@@ -629,6 +630,7 @@ int main(int argc, char* argv[]) {
 				return 1;
 			}
 			remaining_length -= curr_block_length;
+			std::cout << "Downloaded block " << i << std::endl;
 		}
 		std::cout << "Downloaded piece " << piece_index << std::endl;
 	} else {
