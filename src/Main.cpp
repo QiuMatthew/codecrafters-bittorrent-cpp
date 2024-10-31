@@ -483,9 +483,9 @@ int main(int argc, char* argv[]) {
 			static_cast<std::uint8_t>(bitfield_message_length_prefix[3]);
 		std::cout << "Bitfield Message Length: " << bitfield_message_length
 				  << std::endl;
-		std::vector<char> bitfield_message(bitfield_message_length);
-		if (recv(sockfd, bitfield_message.data(), bitfield_message.size(), 0) <
-			0) {
+		std::vector<char> bitfield_message(bitfield_message_length + 1);
+		if (recv(sockfd, bitfield_message.data(), bitfield_message_length + 1,
+				 0) < 0) {
 			std::cerr << "Failed to receive bitfield message" << std::endl;
 			return 1;
 		}
