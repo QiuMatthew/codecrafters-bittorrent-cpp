@@ -517,8 +517,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "Unchoke Message Length: " << unchoke_message_length
 				  << std::endl;
 		std::vector<char> unchoke_message(unchoke_message_length);
-		std::cout << "Unchoke Message Size: " << unchoke_message.size()
-				  << std::endl;
 		if (recv(sockfd, unchoke_message.data(), unchoke_message.size(), 0) <
 			0) {
 			std::cerr << "Failed to receive unchoke message" << std::endl;
