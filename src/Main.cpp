@@ -473,7 +473,7 @@ int main(int argc, char* argv[]) {
 			std::cerr << "Failed to receive message length" << std::endl;
 			return 1;
 		}
-		std::int32_t bitfield_message_length =
+		std::uint32_t bitfield_message_length =
 			(bitfield_message_length_prefix[0] << 24) |
 			(bitfield_message_length_prefix[1] << 16) |
 			(bitfield_message_length_prefix[2] << 8) |
