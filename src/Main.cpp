@@ -584,8 +584,7 @@ int main(int argc, char* argv[]) {
 			block_message_length_prefix[1] = 0;
 			block_message_length_prefix[2] = 0;
 			block_message_length_prefix[3] = 0;
-			if (recv(sockfd, block_message_length_prefix.data(),
-					 block_message_length_prefix.size(), 0) < 0) {
+			if (recv(sockfd, block_message_length_prefix.data(), 4, 0) < 0) {
 				std::cerr << "Failed to receive message length" << std::endl;
 				return 1;
 			}
