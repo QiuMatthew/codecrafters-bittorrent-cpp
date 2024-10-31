@@ -589,6 +589,11 @@ int main(int argc, char* argv[]) {
 					return 1;
 				}
 			}
+			for (int i = 0; i < 4; i++) {
+				std::cout << "Block Message Length Prefix[" << i
+						  << "]: " << (int)block_message_length_prefix[i]
+						  << std::endl;
+			}
 			block_message_length =
 				(static_cast<std::uint8_t>(block_message_length_prefix[0])
 				 << 24) |
