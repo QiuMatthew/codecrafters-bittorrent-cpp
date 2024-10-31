@@ -513,10 +513,12 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		std::int32_t unchoke_message_length =
-			(unchoke_message_length_prefix[0] << 24) |
-			(unchoke_message_length_prefix[1] << 16) |
-			(unchoke_message_length_prefix[2] << 8) |
-			unchoke_message_length_prefix[3];
+			(static_cast<std::uint8_t>(unchoke_message_length_prefix[0])
+			 << 24) |
+			(static_cast<std::uint8_t>(unchoke_message_length_prefix[1])
+			 << 16) |
+			(static_cast<std::uint8_t>(unchoke_message_length_prefix[2]) << 8) |
+			static_cast<std::uint8_t>(unchoke_message_length_prefix[3]);
 		std::cout << "Unchoke Message Length: " << unchoke_message_length
 				  << std::endl;
 		std::vector<char> unchoke_message(unchoke_message_length);
