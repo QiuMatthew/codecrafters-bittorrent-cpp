@@ -581,19 +581,13 @@ int main(int argc, char* argv[]) {
 			// receive block message
 			std::vector<char> block_message_length_prefix(4, 0);
 			std::int32_t block_message_length = 0;
-			block_message_length =
-				(static_cast<std::uint8_t>(block_message_length_prefix[0])
-				 << 24) |
-				(static_cast<std::uint8_t>(block_message_length_prefix[1])
-				 << 16) |
-				(static_cast<std::uint8_t>(block_message_length_prefix[2])
-				 << 8) |
-				static_cast<std::uint8_t>(block_message_length_prefix[3]);
-			std::cout << "Block Message Length: " << block_message_length
-					  << std::endl;
-			if (recv(sockfd, block_message_length_prefix.data(), 4, 0) < 0) {
-				std::cerr << "Failed to receive message length" << std::endl;
-				return 1;
+			for (int i = 0; i < 4; i++) {
+				if (recv(sockfd, block_message_length_prefix.data() + i, 1, 0) <
+					0) {
+					std::cerr << "Failed to receive message length"
+							  << std::endl;
+					return 1;
+				}
 			}
 			block_message_length =
 				(static_cast<std::uint8_t>(block_message_length_prefix[0])
